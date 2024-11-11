@@ -132,7 +132,7 @@ env.bak/
 venv.bak/
 
 # Google speech API
-.json
+google-speech.json
 
 # Spyder project settings
 .spyderproject
