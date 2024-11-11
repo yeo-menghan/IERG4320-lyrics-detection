@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MP3 Transcription</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 20px;
+            background-color: #f4f4f9;
+            text-align: center;
+        }
+        h1 {
+            color: #333;
+        }
+        input[type="file"] {
+            margin-top: 10px;
+            padding: 10px;
+        }
+        button {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        #result {
+            margin-top: 20px;
+            font-size: 18px;
+            font-weight: bold;
+        }
+        #error {
+            margin-top: 20px;
+            font-size: 18px;
+            color: red;
+        }
+        #loading {
+            margin-top: 20px;
+            display: none;
+            font-size: 20px;
+            color: #007bff;
+        }
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #007bff;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 2s linear infinite;
+            display: inline-block;
+        }
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <h1>Upload an MP3 File for Transcription</h1>
+
+    <form id="uploadForm" enctype="multipart/form-data">
+        <label for="file">Choose an MP3 file (less than 1 minute):</label><br><br>
+        <input type="file" id="file" name="file" accept=".mp3" required><br><br>
+        <button type="submit">Upload and Transcribe</button>
+    </form>
+
+    <div id="loading">
+        <div class="spinner"></div> Transcribing...
+    </div>
+
+    <div id="result"></div>
+    <div id="error"></div>
+
+    <script>
+        document.getElementById('uploadForm').addEventListener('submit', function(event) {
+            event.preventDefault();
+
+            const formData = new FormData();
+            const fileInput = document.getElementById('file');
+            formData.append('file', fileInput.files[0]);
+
+            // Show the loading spinner
+            document.getElementById('loading').style.display = 'inline-block';
+            document.getElementById('result').innerText = "";  // Clear previous results
+            document.getElementById('error').innerText = "";  // Clear previous errors
+
+            fetch('/transcribe', {
+                method: 'POST',
+                body: formData,
+            })
+            .then(response => {
+                // Ensure the response is in JSON format
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                return response.json();
+            })
+            .then(data => {
+                // Hide the loading spinner once the transcription is done
+                document.getElementById('loading').style.display = 'none';
+
+                if (data.transcription) {
+                    document.getElementById('result').innerText = "Transcription: " + data.transcription;
+                    document.getElementById('error').innerText = "";  // Clear any previous errors
+                } else {
+                    document.getElementById('result').innerText = "";
+                    document.getElementById('error').innerText = "Error: " + data.error;
+                }
+            })
+            .catch(error => {
+                // Hide the loading spinner if an error occurs
+                document.getElementById('loading').style.display = 'none';
+                document.getElementById('result').innerText = "";
+                document.getElementById('error').innerText = "Error: " + error.message;
+            });
+        });
+    </script>
+
+</body>
+</html>
